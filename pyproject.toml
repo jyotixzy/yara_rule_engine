@@ -1,0 +1,28 @@
+pyproject.toml is the configuration file of a Python project.
+In this project, it specifies the package name, the dependencies, and which command will be executed.
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yara-eml-scanner"
+version = "0.1.0"
+description = "Parse EML files, extract and decode attachments, unpack nested containers, and scan with YARA."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "yara-python>=4.5.0",
+    "py7zr>=0.21.0",
+    "rarfile>=4.2",
+]
+
+[project.scripts]
+yara-eml-scan = "yara_eml_scanner.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
