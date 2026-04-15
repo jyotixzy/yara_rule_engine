@@ -9,7 +9,7 @@ from email.message import Message
 from email.parser import BytesParser
 from pathlib import Path
 
-from .config import MAX_ATTACHMENT_BYTES
+from .config import MAX_EXTRACTED_FILES, MAX_FILE_BYTES
 from .models import ExtractedFile
 
 LOGGER = logging.getLogger(__name__)
@@ -40,11 +40,15 @@ def extract_attachments(message: Message, output_dir: Path) -> list[ExtractedFil
 
     # iter_attachments() sirf attachment parts ko iterate karta hai, body ko nahi.
     for index, part in enumerate(message.iter_attachments(), start=1):
+        if len(extracted) >= MAX_EXTRACTED_FILES:
+            LOGGER.warning("Attachment extraction stopped because the max file limit was reached.")
+            break
+
         payload = part.get_payload(decode=True)
         if payload is None:
             LOGGER.warning("Skipping attachment %s because payload decoding returned no bytes.", index)
             continue
-        if len(payload) > MAX_ATTACHMENT_BYTES:
+        if len(payload) > MAX_FILE_BYTES:
             LOGGER.warning("Skipping attachment %s because it exceeds the configured size limit.", index)
             continue
 

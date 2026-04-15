@@ -7,8 +7,8 @@ import json
 import sys
 
 from .logging_utils import configure_logging
-from .models import FileScanResult
 from .pipeline import run_pipeline
+from .reporting import format_summary
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -20,35 +20,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--pretty", action="store_true", help="Pretty-print JSON output.")
     parser.add_argument("--verbose", action="store_true", help="Enable debug logging.")
     return parser
-
-
-def format_summary(scan_results: list[FileScanResult]) -> str:
-    """Ye function final results ko short human-readable summary me convert karta hai."""
-
-    lines: list[str] = []
-
-    # Yahan hum results ko do groups me baant rahe hain: malicious aur clean.
-    malicious_results = [result for result in scan_results if result.is_malicious]
-    clean_results = [result for result in scan_results if not result.is_malicious]
-
-    lines.append("Malicious files:")
-    if malicious_results:
-        for result in malicious_results:
-            # Ek hi file par multiple same rule names aa sakte hain, isliye unique rule list bana rahe hain.
-            rule_names = ", ".join(sorted({match.rule for match in result.matches}))
-            lines.append(f"- {result.file.source_name} | rules: {rule_names}")
-    else:
-        lines.append("- None")
-
-    lines.append("")
-    lines.append("Clean files:")
-    if clean_results:
-        for result in clean_results:
-            lines.append(f"- {result.file.source_name}")
-    else:
-        lines.append("- None")
-
-    return "\n".join(lines)
 
 
 def main() -> int:

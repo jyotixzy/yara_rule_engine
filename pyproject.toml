@@ -12,12 +12,16 @@ description = "Parse EML files, extract and decode attachments, unpack nested co
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "fastapi>=0.115.0",
+    "python-multipart>=0.0.9",
     "yara-python>=4.5.0",
     "py7zr>=0.21.0",
     "rarfile>=4.2",
+    "uvicorn>=0.30.0",
 ]
 
 [project.scripts]
+yara-api = "yara_eml_scanner.api:main"
 yara-eml-scan = "yara_eml_scanner.cli:main"
 
 [tool.setuptools]
@@ -25,4 +29,3 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-

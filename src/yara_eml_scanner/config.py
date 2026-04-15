@@ -24,6 +24,6 @@ SUPPORTED_RULE_SUFFIXES = {".yar", ".yara"}
 SUPPORTED_CONTAINER_TYPES = {"zip", "tar", "gzip", "bzip2", "xz", "7z", "rar"}
 
 # Safety limits taaki bahut deep ya bahut large file processing se system choke na ho.
-MAX_RECURSION_DEPTH = 5
-MAX_ATTACHMENT_BYTES = 100 * 1024 * 1024
-MAX_UNPACKED_BYTES = 500 * 1024 * 1024
+MAX_RECURSION_DEPTH = 2
+MAX_EXTRACTED_FILES = 50
+MAX_FILE_BYTES = 10 * 1024 * 1024

@@ -11,7 +11,7 @@ import tarfile
 import zipfile
 from pathlib import Path
 
-from .config import MAX_RECURSION_DEPTH, MAX_UNPACKED_BYTES, SUPPORTED_CONTAINER_TYPES
+from .config import MAX_EXTRACTED_FILES, MAX_FILE_BYTES, MAX_RECURSION_DEPTH, SUPPORTED_CONTAINER_TYPES
 from .file_types import detect_file_type
 from .models import ExtractedFile
 
@@ -37,7 +37,7 @@ def is_container_type(detected_type: str) -> bool:
 def _enforce_size_limit(path: Path) -> None:
     """Ye guard hai jo oversized file ko process hone se rokta hai."""
 
-    if path.stat().st_size > MAX_UNPACKED_BYTES:
+    if path.stat().st_size > MAX_FILE_BYTES:
         raise ValueError(f"Refusing to process oversized file: {path}")
 
 
@@ -169,6 +169,10 @@ def expand_containers(files: list[ExtractedFile], workspace: Path) -> list[Extra
 
     # Queue-based traversal use ki gayi hai taaki nested containers level by level handle ho sakein.
     while queue:
+        if len(expanded) >= MAX_EXTRACTED_FILES:
+            LOGGER.warning("Container expansion stopped because the max file limit was reached.")
+            break
+
         current = queue.pop(0)
         _enforce_size_limit(current.path)
         current.detected_type = detect_file_type(current.path)
@@ -190,6 +194,16 @@ def expand_containers(files: list[ExtractedFile], workspace: Path) -> list[Extra
 
         # Unpacked child files ko queue me daal diya jata hai taaki un par bhi same logic lage.
         for child_path in unpacked_paths:
+            if len(expanded) + len(queue) >= MAX_EXTRACTED_FILES:
+                LOGGER.warning("Skipping additional unpacked files because the max file limit was reached.")
+                break
+            if not child_path.is_file():
+                continue
+            try:
+                _enforce_size_limit(child_path)
+            except ValueError:
+                LOGGER.warning("Skipping unpacked file %s because it exceeds the size limit.", child_path)
+                continue
             queue.append(
                 ExtractedFile(
                     path=child_path,

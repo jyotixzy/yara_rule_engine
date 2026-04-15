@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 import logging
+import os
 from pathlib import Path
 import warnings
 
@@ -59,7 +61,13 @@ def scan_file(file_info: ExtractedFile, compiled_rules: list[CompiledRuleFile]) 
 def scan_files(files: list[ExtractedFile], compiled_rules: list[CompiledRuleFile]) -> list[FileScanResult]:
     """Ye sab final files ko scan karke per-file results return karta hai."""
 
-    results = [scan_file(file_info, compiled_rules) for file_info in files]
+    if not files:
+        return []
+
+    max_workers = min(len(files), max(1, min(8, os.cpu_count() or 1)))
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        results = list(executor.map(lambda file_info: scan_file(file_info, compiled_rules), files))
+
     # Logging yahan summary level par hoti hai, taaki verbose mode me per-file visibility mile.
     for result in results:
         if result.is_malicious:
